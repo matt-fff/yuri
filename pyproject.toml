@@ -7,6 +7,9 @@ authors = ["Matt White <code@typenil.com>"]
 [tool.poetry.dependencies]
 python = "^3.9"
 typer = "^0.3.2"
+gTTS = "^2.2.2"
+loguru = "^0.5.3"
+pydub = "^0.24.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
