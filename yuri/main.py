@@ -7,19 +7,33 @@ from gtts import gTTS
 from pydub import AudioSegment
 from pydub.playback import play
 
+from yuri.listener import SRListener
+from yuri.speaker import SpeakerFactory
 
+app = typer.Typer()
+
+
+@app.command()
 def say(message: str):
-    typer.echo(message)
-    mp3_fp = BytesIO()
-    tts = gTTS(message, lang="en")
-    tts.write_to_fp(mp3_fp)
-    mp3_fp.seek(0)
-    play(AudioSegment.from_mp3(mp3_fp))
+    speaker = SpeakerFactory.create()
+    speaker.say(message)
 
 
-def main(name: str):
-    say(f"Hello {name}")
+@app.command()
+def transcribe(listener_type: str = "sphinx"):
+    listener = SRListener(listener_type)
+    for transcription in listener.transcribe():
+        logger.info(transcription)
+
+
+@app.command()
+def repeat():
+    listener = ListenerFactory.create()
+    transcription = listener.transcribe()
+
+    speaker = SpeakerFactory.create()
+    speaker.say(transcription)
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    app()
