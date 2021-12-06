@@ -6,8 +6,13 @@ from loguru import logger
 from pydub import AudioSegment
 from pydub.playback import play
 
+from yuri.config import Config
+
 
 class Speaker(metaclass=ABCMeta):
+    def __init__(self, config: Config):
+        self.config = config
+
     @abstractmethod
     def say(self, message: str):
         raise NotImplementedError()
@@ -32,8 +37,9 @@ class SpeakerFactory:
     }
 
     @classmethod
-    def create(cls, *args, speaker_type: str = "google", **kwargs) -> Speaker:
+    def create(cls, config: Config) -> Speaker:
+        speaker_type = config.speaker_type
         if speaker_type not in cls.SPEAKERS:
             raise ValueError(f"{speaker_type} is invalid")
 
-        return cls.SPEAKERS[speaker_type](*args, **kwargs)
+        return cls.SPEAKERS[speaker_type](config)
