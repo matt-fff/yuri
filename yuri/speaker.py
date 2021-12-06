@@ -2,6 +2,7 @@ from abc import abstractmethod, ABCMeta
 from io import BytesIO
 
 from gtts import gTTS
+from loguru import logger
 from pydub import AudioSegment
 from pydub.playback import play
 
@@ -14,11 +15,15 @@ class Speaker(metaclass=ABCMeta):
 
 class GoogleSpeaker(Speaker):
     def say(self, message: str):
+        logger.info("say.start", message=message)
+
         mp3_fp = BytesIO()
         tts = gTTS(message, lang="en")
         tts.write_to_fp(mp3_fp)
         mp3_fp.seek(0)
+
         play(AudioSegment.from_mp3(mp3_fp))
+        logger.info("say.done", message=message)
 
 
 class SpeakerFactory:

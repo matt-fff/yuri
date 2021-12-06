@@ -1,24 +1,38 @@
 from abc import abstractmethod, ABCMeta
-from typing import List
+from dataclasses import dataclass
 
 from loguru import logger
-import speech_recognition
+import speech_recognition as sr
+
+
+@dataclass
+class Transcription:
+    text: str
 
 
 class Listener(metaclass=ABCMeta):
     @abstractmethod
-    def transcribe(self) -> List[str]:
+    def listen(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def transcribe(self, audio) -> Transcription:
         raise NotImplementedError()
 
 
-class SRListener(Listener):
-    def __init__(self, type_key: str):
-        self.mic = speech_recognition.Microphone()
-        self.recognizer = speech_recognition.Recognizer()
-        self.type_key = type_key
+class SpeechRecognitionListener(Listener):
+    def __init__(self, listener_type: str):
+        self.mic = sr.Microphone()
+        self.recognizer = sr.Recognizer()
 
-    def transcribe(self) -> List[str]:
-        logger.info("transcribe.start")
+        transcribe_name = f"recognize_{listener_type}"
+        if not hasattr(self.recognizer, transcribe_name):
+            raise ValueError(f"{listener_type} is not a valid listener type")
+
+        self.recognize = getattr(self.recognizer, transcribe_name)
+
+    def listen(self) -> sr.AudioData:
+        logger.info("listen.start")
 
         with self.mic as source:
             logger.debug("adjusting")
@@ -27,12 +41,19 @@ class SRListener(Listener):
             logger.debug("listening")
             audio = self.recognizer.listen(source)
 
-            transcriptions = []
-            logger.debug("recognizing")
-            for type_key in self.type_key.split(","):
-                transcription = getattr(self.recognizer, f"recognize_{type_key}")(audio)
-                transcriptions.append(transcription)
-                logger.debug(f"{type_key}: {transcription}")
+        logger.info("listen.done")
+        return audio
+
+    def transcribe(self, audio: sr.AudioData) -> Transcription:
+        logger.info("transcribe.start")
+
+        transcription = self.recognize(audio)
 
         logger.info("transcribe.done")
-        return transcriptions
+        return transcription
+
+
+class ListenerFactory:
+    @classmethod
+    def create(cls, listener_type: str = "sphinx") -> Listener:
+        return SpeechRecognitionListener(listener_type)
