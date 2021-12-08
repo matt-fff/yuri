@@ -16,6 +16,7 @@ app = typer.Typer()
 
 DEFAULT_CONFIG_LOCATION = "yuri-config.yaml"
 
+
 def get_config(config_path: Optional[str]) -> Config:
     config_path = config_path or DEFAULT_CONFIG_LOCATION
     return ConfigFactory.create(config_path)

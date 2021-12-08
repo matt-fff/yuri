@@ -26,6 +26,8 @@ class Listener(metaclass=ABCMeta):
         raise NotImplementedError()
 
 
+# TODO speech_recognition isn't maintained. The transcription is too slow.
+# Find something faster.
 class SpeechRecognitionListener(Listener):
     def __init__(self, config: Config):
         super().__init__(config)
@@ -60,7 +62,7 @@ class SpeechRecognitionListener(Listener):
 
         transcription = self.recognize(audio)
 
-        logger.info("transcribe.done", transcription=transcription)
+        logger.info("transcribe.done")
         return Transcription(text=transcription)
 
 

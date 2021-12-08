@@ -1,27 +1,14 @@
-[tool.poetry]
-name = "yuri"
-version = "0.1.0"
-description = ""
-authors = ["Matt White <code@typenil.com>"]
-
-[tool.poetry.dependencies]
-python = "^3.9"
-typer = "^0.3.2"
-gTTS = "^2.2.2"
-loguru = "^0.5.3"
-pydub = "^0.24.1"
-sounddevice = "^0.4.1"
-numpy = "^1.20.1"
-SpeechRecognition = "^3.8.1"
-PyAudio = "^0.2.11"
-pocketsphinx = "^0.1.15"
-mypy = "^0.910"
-PyYAML = "^6.0"
-
-[tool.poetry.dev-dependencies]
-pytest = "^5.2"
-ipdb = "^0.13.4"
-
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["flit_core >=2,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.metadata]
+module = "yuri"
+author = "Matt White"
+author-email = "code@typenil.com"
+home-page = "https://typenil.com"
+classifiers = ["License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)"]
+description-file = "README.rst"
+
+[project.urls]
+Home = "https://github.com/typenil/yuri"
