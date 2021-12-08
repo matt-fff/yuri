@@ -1,16 +1,13 @@
-import os
-from io import BytesIO
 from typing import Optional
 
 import typer
 from loguru import logger
-from gtts import gTTS
-from pydub import AudioSegment
-from pydub.playback import play
 
 from yuri.config import Config, ConfigFactory
 from yuri.listener import ListenerFactory
 from yuri.speaker import SpeakerFactory
+from yuri.lights import Lights
+from yuri.input import Input
 
 app = typer.Typer()
 
@@ -20,6 +17,18 @@ DEFAULT_CONFIG_LOCATION = "yuri-config.yaml"
 def get_config(config_path: Optional[str]) -> Config:
     config_path = config_path or DEFAULT_CONFIG_LOCATION
     return ConfigFactory.create(config_path)
+
+@app.command()
+def inputs(seconds: int = 10, config_path: Optional[str] = None):
+    config = get_config(config_path)
+    inputs = Input(config)
+    inputs.demo(seconds)
+
+@app.command()
+def colors(seconds: int = 3, config_path: Optional[str] = None):
+    config = get_config(config_path)
+    lights = Lights(config)
+    lights.cycle_colors(seconds)
 
 
 @app.command()
