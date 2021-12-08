@@ -8,15 +8,21 @@ from yuri.listener import ListenerFactory
 from yuri.speaker import SpeakerFactory
 from yuri.lights import Lights
 from yuri.input import Input
+from yuri.textgen import TextGen
 
 app = typer.Typer()
 
-DEFAULT_CONFIG_LOCATION = "yuri-config.yaml"
+DEFAULT_CONFIG_LOCATION = "yuri.yaml"
 
 
 def get_config(config_path: Optional[str]) -> Config:
     config_path = config_path or DEFAULT_CONFIG_LOCATION
     return ConfigFactory.create(config_path)
+@app.command()
+def textgen(prompt: Optional[str] = None, config_path: Optional[str] = None):
+    config = get_config(config_path)
+    tg = TextGen(config)
+    tg.generate(prompt)
 
 @app.command()
 def inputs(seconds: int = 10, config_path: Optional[str] = None):
