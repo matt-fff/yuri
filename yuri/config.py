@@ -2,7 +2,6 @@ from dataclasses import dataclass, field
 
 import board
 import yaml
-import board
 
 
 @dataclass

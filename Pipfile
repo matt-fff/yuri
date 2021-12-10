@@ -4,8 +4,22 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+typer = "*"
+loguru = "*"
+PyYAML = "*"
+SpeechRecognition = "*"
+gTTS = "*"
+pydub = "*"
+adafruit-circuitpython-dotstar = "*"
+adafruit-circuitpython-motor = "*"
+adafruit-circuitpython-bmp280 = "*"
+pyaudio = "*"
+pocketsphinx = "*"
 
 [dev-packages]
+ipython = "*"
+ipdb = "*"
+flake8 = "*"
 
 [requires]
 python_version = "3.7"
