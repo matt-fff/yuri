@@ -8,17 +8,49 @@ Dependencies
 sudo apt install swig libpulse-dev libasound2-dev git uidmap pipenv \
 	make build-essential libssl-dev zlib1g-dev \
 	libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
-	libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+	libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev \
+	libffi-dev liblzma-dev neovim tmux
 
 git clone https://github.com/pyenv/pyenv.git ~/.pyenv
 cd ~/.pyenv && src/configure && make -C src
+
+# the sed invocation inserts the lines at the start of the file
+# after any initial comment lines
+sed -Ei -e '/^([^#]|$)/ {a \
+export PYENV_ROOT="$HOME/.pyenv"
+a \
+export PATH="$PYENV_ROOT/bin:$PATH"
+a \
+' -e ':a' -e '$!{n;ba};}' ~/.profile
+echo 'eval "$(pyenv init --path)"' >>~/.profile
+echo 'eval "$(pyenv init -)"' >> ~/.bashrc
+
 sudo curl -sSL https://get.docker.com/ | sh
 ```
 
 You have to haver docker setup in rootless mode: https://docs.docker.com/engine/security/rootless/
 ```
-sudo systemctl disable --now docker.service docker.socket
 dockerd-rootless-setuptool.sh install
+```
+
+### On the main system
+```
+scp .tmux.conf* yuri:~/
+scp .ssh/github.p* yuri:~/.ssh/
+scp .gitconfig yuri:~/
+scp .ssh/config yuri:~/.ssh/
+scp .config/nvim/init.vim
+```
+
+### Clone the repo
+```
+cd ~
+git clone git@github.com:typenil/yuri.git
+cd yuri
+pyenv install 3.7.12
+pyenv local 3.7.12
+pipenv shell
+pipenv install
 ```
 
 ### Display
@@ -37,6 +69,8 @@ sudo python3 adafruit-pitft.py --display=st7789_240x240 --rotation=90 --install-
 There was no exact match for the hat I'm using. But the display is the same resolution and whatnot.
 
 _NOTE the display setup takes FOREVER and there's no progress bar/output to speak of_
+
+
 
 #### Tensorflow - install hell
 Good guide: https://www.bitsy.ai/3-ways-to-install-tensorflow-on-raspberry-pi/
