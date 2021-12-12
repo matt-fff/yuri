@@ -9,7 +9,7 @@ sudo apt install swig libpulse-dev libasound2-dev git uidmap pipenv \
 	make build-essential libssl-dev zlib1g-dev \
 	libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
 	libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev \
-	libffi-dev liblzma-dev neovim tmux
+	libffi-dev liblzma-dev neovim tmux fzf silversearcher-ag
 
 git clone https://github.com/pyenv/pyenv.git ~/.pyenv
 cd ~/.pyenv && src/configure && make -C src
