@@ -83,6 +83,13 @@ pipenv install https://compatible-wheel-uri
 ^ None of these wheels support 32 bit. Save yourself some trouble and install Rasbian in 64 bit mode 
 
 
+##### From community binaries
+Find a compatible wheel here: https://github.com/bitsy-ai/tensorflow-arm-bin
+```
+pipenv install https://github.com/bitsy-ai/tensorflow-arm-bin/releases/download/v2.4.0/tensorflow-2.4.0-cp37-none-linux_aarch64.whl
+```
+
+
 ##### From source
 ```
 git clone https://github.com/tensorflow/tensorflow.git
