@@ -2,18 +2,38 @@
 
 ## Setup notes:
 
+### Audio
+Check if audio is working:
+```
+sudo i2cdetect -y 1
+```
 
-Dependencies
+Installing
+```
+cd ~
+sudo apt-get install -y git
+git clone https://github.com/HinTak/seeed-voicecard
+cd seeed-voicecard
+```
+
+
+Determine the right branch with `uname -r`
+for 5.4 use `v5.5`; for 5.10 and higher, use `v5.9`
+
+e.g. with 5.10.63-v8+
+```
+git checkout v5.9
+sudo ./install.sh
+```
+
+### Dependencies
 ```
 sudo apt install swig libpulse-dev libasound2-dev git uidmap pipenv \
 	make build-essential libssl-dev zlib1g-dev \
 	libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
 	libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev \
 	libffi-dev liblzma-dev neovim tmux fzf silversearcher-ag \
-	pkg-config libhdf5-dev multimedia-jack
-	
-pulseaudio --kill
-jack_control  start
+	pkg-config libhdf5-dev
 
 git clone https://github.com/pyenv/pyenv.git ~/.pyenv
 cd ~/.pyenv && src/configure && make -C src
