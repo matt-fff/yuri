@@ -3,19 +3,20 @@
 ## Setup notes:
 
 ### Audio
+https://learn.adafruit.com/adafruit-braincraft-hat-easy-machine-learning-for-raspberry-pi/audio-setup
+
 Check if audio is working:
 ```
 sudo i2cdetect -y 1
 ```
 
-Installing
+Installing the onboard audio
 ```
 cd ~
 sudo apt-get install -y git
 git clone https://github.com/HinTak/seeed-voicecard
 cd seeed-voicecard
 ```
-
 
 Determine the right branch with `uname -r`
 for 5.4 use `v5.5`; for 5.10 and higher, use `v5.9`
@@ -24,6 +25,11 @@ e.g. with 5.10.63-v8+
 ```
 git checkout v5.9
 sudo ./install.sh
+```
+
+Changing the default device - use pulseaudio. Find the desired device with `pactl list short sinks` then use it with `pactl set-default-sink`, e.g.
+```
+pactl set-default-sink alsa_output.usb-Jieli_Technology_UACDemoV1.0_1120022704050903-01.analog-stereo 
 ```
 
 ### Dependencies
