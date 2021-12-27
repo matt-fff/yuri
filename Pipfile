@@ -15,11 +15,17 @@ adafruit-circuitpython-motor = "*"
 adafruit-circuitpython-bmp280 = "*"
 pyaudio = "*"
 pocketsphinx = "*"
+"rpi.gpio" = "*"
+tensorflow = {file = "https://github.com/bitsy-ai/tensorflow-arm-bin/releases/download/v2.4.0/tensorflow-2.4.0-cp37-none-linux_aarch64.whl"}
+pip = "*"
+adafruit-pca9685 = "*"
+adafruit-circuitpython-servokit = "*"
 
 [dev-packages]
 ipython = "*"
 ipdb = "*"
 flake8 = "*"
+pylint = "*"
 
 [requires]
-python_version = "3.7"
+python_version = "3.7.12"

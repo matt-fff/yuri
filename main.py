@@ -8,6 +8,7 @@ from yuri.listener import ListenerFactory
 from yuri.speaker import SpeakerFactory
 from yuri.lights import Lights
 from yuri.input import Input
+from yuri.servos import Servos
 # from yuri.textgen import TextGen
 
 app = typer.Typer()
@@ -19,11 +20,26 @@ def get_config(config_path: Optional[str]) -> Config:
     config_path = config_path or DEFAULT_CONFIG_LOCATION
     return ConfigFactory.create(config_path)
 
-# @app.command()
-# def textgen(prompt: Optional[str] = None, config_path: Optional[str] = None):
-#     config = get_config(config_path)
-#     tg = TextGen(config)
-#     tg.generate(prompt)
+@app.command()
+def respond(prompt: str, config_path: Optional[str] = None):
+    config = get_config(config_path)
+    # tg = TextGen(config)
+    # tg.generate(prompt)
+    logger.error("respond is not yet implemented")
+
+
+@app.command()
+def servos(config_path: Optional[str] = None):
+    config = get_config(config_path)
+    servos = Servos(config)
+    servos.rotate()
+
+
+
+@app.command()
+def converse(max_seconds: Optional[int] = None, config_path: Optional[str] = None):
+    config = get_config(config_path)
+    logger.error("converse is not yet implemented")
 
 @app.command()
 def inputs(seconds: int = 10, config_path: Optional[str] = None):
