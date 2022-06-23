@@ -20,6 +20,7 @@ tensorflow = {file = "https://github.com/bitsy-ai/tensorflow-arm-bin/releases/do
 pip = "*"
 adafruit-pca9685 = "*"
 adafruit-circuitpython-servokit = "*"
+pyttsx3 = "*"
 
 [dev-packages]
 ipython = "*"

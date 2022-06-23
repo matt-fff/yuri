@@ -1,6 +1,8 @@
 from abc import abstractmethod, ABCMeta
 from io import BytesIO
 
+import pyttsx3
+
 from gtts import gTTS
 from loguru import logger
 from pydub import AudioSegment
@@ -23,17 +25,34 @@ class GoogleSpeaker(Speaker):
         logger.info("say.start", message=message)
 
         mp3_fp = BytesIO()
-        tts = gTTS(message, lang="en")
+        tts = gTTS(message, lang="en", tld="ru")
         tts.write_to_fp(mp3_fp)
         mp3_fp.seek(0)
 
         play(AudioSegment.from_mp3(mp3_fp))
         logger.info("say.done", message=message)
 
+class Ttsx3Speaker(Speaker):
+    def __init__(self, config: Config):
+        self.config = config
+        self.engine = pyttsx3.init()
+        # voices 2, 13, 14, 17
+        # 61 = Russian
+        # 62 = Slovak
+        self.engine.setProperty("voice", self.engine.getProperty("voices")[15].id)
+        self.engine.setProperty("rate", 160)
+
+    def say(self, message: str):
+        logger.info("say.start", message=message)
+        self.engine.say(message)
+        self.engine.runAndWait()
+        logger.info("say.done", message=message)
+
 
 class SpeakerFactory:
     SPEAKERS = {
         "google": GoogleSpeaker,
+        "pyttsx3": Ttsx3Speaker,
     }
 
     @classmethod
