@@ -6,82 +6,32 @@ from typing import List
 from dataclasses import dataclass
 
 from loguru import logger
-from adafruit_motor import servo
+from adafruit_motor.servo import Servo
 from adafruit_servokit import ServoKit
 from adafruit_pca9685 import PCA9685
 
 from yuri.config import Config
 
 
-@dataclass
-class Servo:
-    servo: servo.Servo
-    min_angle: int
-    max_angle: int
 
-    @property
-    def neutral_angle(self) -> int:
-        return (self.max_angle + self.min_angle) / 2
+@dataclass
+class Eyes:
+    upper_lids: Servo
+    lower_lids: Servo
     
-    def max(self):
-        self.servo.angle = self.max_angle
+    left_y: Servo
+    left_x: Servo
 
-    def min(self):
-        self.servo.angle = self.min_angle
+    right_y: Servo
+    right_x: Servo
 
-    def neutral(self):
-        self.servo.angle = self.neutral_angle
+    def open(self, wide: bool = False):
+        self.lower_lids.angle = 16 if wide else 13
+        self.upper_lids.angle = 13 if wide else 10
 
-    @property
-    def angle(self):
-        return self.servo.angle
-
-
-@dataclass
-class Face:
-    left_eye: Servo
-    right_eye: Servo
-    nose: Servo
-    left_mouth: Servo
-    right_mouth: Servo
-
-    def smile(self):
-        self.left_eye.max()
-        self.right_eye.max()
-        
-        self.left_mouth.max()
-        self.right_mouth.max()
-
-    def frown(self):
-        self.left_eye.min()
-        self.right_eye.min()
-        
-        self.left_mouth.min()
-        self.right_mouth.min()
-
-    @property
-    def servos(self) -> List[Servo]:
-        return [
-            self.left_eye,
-            self.right_eye,
-            self.nose,
-            self.left_mouth,
-            self.right_mouth,
-        ]
-
-    def neutral(self):
-        for servo in self.servos:
-            servo.neutral()
-
-    def min(self):
-        for servo in self.servos:
-            servo.min()
-
-    def max(self):
-        for servo in self.servos:
-            servo.max()
-
-
+    def close(self):
+        self.lower_lids.angle = 10
+        self.upper_lids.angle = 7
 
 FAST = 0.3
 
@@ -91,39 +41,17 @@ class Servos:
         self.config = config
         self.i2c = busio.I2C(board.SCL, board.SDA)
         self.pca = PCA9685(self.i2c)
-        self.pca.frequency = 50
-        self.face = Face(
-            left_eye=Servo(
-                servo=servo.Servo(self.pca.channels[0]),
-                min_angle=100,
-                max_angle=30,
-            ),
-            right_eye=Servo(
-                servo=servo.Servo(self.pca.channels[1]),
-                min_angle=50,
-                max_angle=150,
-            ),
-            nose=Servo(
-                servo=servo.Servo(self.pca.channels[2]),
-                min_angle=100,
-                max_angle=0,
-            ),
-            left_mouth=Servo(
-                servo=servo.Servo(self.pca.channels[3]),
-                min_angle=60,
-                max_angle=120,
-            ),
-            right_mouth=Servo(
-                servo=servo.Servo(self.pca.channels[4]),
-                min_angle=120,
-                max_angle=60,
-            ),
+        self.pca.frequency = 100
+
+        self.eyes = Eyes(
+            lower_lids=Servo(self.pca.channels[0], actuation_range=30),
+            right_y=Servo(self.pca.channels[1], actuation_range=30),
+            right_x=Servo(self.pca.channels[2], actuation_range=30), 
+            
+            upper_lids=Servo(self.pca.channels[4], actuation_range=30),
+            left_y=Servo(self.pca.channels[5], actuation_range=30),
+            left_x=Servo(self.pca.channels[6], actuation_range=30),
         )
-
-    
-        
-
-
 
     def rotate(self):
         logger.info("triggering servos")
@@ -134,11 +62,6 @@ class Servos:
         #     servo.angle = 0
         #     time.sleep(1)
         logger.info("done")
-
-    def pulse(self, servo: servo.ContinuousServo, seconds=0.001, speed=FAST):
-        servo.throttle = speed
-        time.sleep(seconds)
-        servo.throttle = 0
 
 
     def smile(self):
