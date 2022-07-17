@@ -1,6 +1,9 @@
 import time
 import board
 import busio
+import asyncio
+import math
+import random
 
 from typing import List
 from dataclasses import dataclass
@@ -11,8 +14,17 @@ from adafruit_servokit import ServoKit
 from adafruit_pca9685 import PCA9685
 
 from yuri.config import Config
+from yuri.input import Input
 
+async def move(servo: Servo, target_angle: float, smoothing_factor: float = 0.80):
+    # Keep iterating until the target angle's reached
+    while not math.isclose(servo.angle, target_angle, rel_tol=0.02):
+        current_angle = servo.angle
+        smoothed_angle = (target_angle * smoothing_factor) + (current_angle * (1.0 - smoothing_factor))
 
+        # Don't move onto the next smooth target until the current angle is achieved.
+        servo.angle = smoothed_angle
+        await asyncio.sleep(0.02)
 
 @dataclass
 class Eyes:
@@ -25,15 +37,106 @@ class Eyes:
     right_y: Servo
     right_x: Servo
 
-    def open(self, wide: bool = False):
-        self.lower_lids.angle = 16 if wide else 13
-        self.upper_lids.angle = 13 if wide else 10
+    @property
+    def servos(self) -> List[Servo]:
+        return [
+            self.upper_lids,
+            self.lower_lids,
+            self.left_y,
+            self.left_x,
+            self.right_y,
+            self.right_x,
+        ]
 
-    def close(self):
-        self.lower_lids.angle = 10
-        self.upper_lids.angle = 7
+    def init(self, config: Config):
+        # Set everything to neutral
+        for servo in self.servos:
+            servo.angle = 0.5 * servo.actuation_range
 
-FAST = 0.3
+        if config.left_eye.neutral_x is not None:
+            self.left_x.angle = config.left_eye.neutral_x
+        if config.left_eye.neutral_y is not None:
+            self.left_y.angle = config.left_eye.neutral_y
+        if config.right_eye.neutral_x is not None:
+            self.right_x.angle = config.right_eye.neutral_x
+        if config.right_eye.neutral_y is not None:
+            self.right_y.angle = config.right_eye.neutral_y
+    
+    def calibrate(self, inputs: Input, config: Config):
+        asyncio.run(self.open(True))
+        for eye in ("left", "right"):
+            logger.info(f"calibrate {eye} eye")
+            y = getattr(self, f"{eye}_y")
+            x = getattr(self, f"{eye}_x")
+            incr = 3
+
+            while inputs.button.value:
+                logger.info(f"x:{x.angle:.2f} | y:{y.angle:.2f}")
+                if not inputs.joyup.value:
+                    y.angle = min(y.angle + incr, y.actuation_range)
+                if not inputs.joydown.value:
+                    y.angle = max(y.angle - incr, 0)
+                if not inputs.joyleft.value:
+                    x.angle = max(x.angle - incr, 0)
+                if not inputs.joyright.value:
+                    x.angle = min(x.angle + incr, x.actuation_range)
+
+                time.sleep(0.3)
+            config_eye = getattr(config, f"{eye}_eye")
+            config_eye.neutral_x = x.angle
+            config_eye.neutral_y = y.angle
+            logger.info(f"Done calibrating {eye} eye")
+
+            time.sleep(1.5)
+
+
+    async def open(self, wide: bool = False):
+        await asyncio.gather(
+            move(self.lower_lids, 15 if wide else 13),
+            move(self.upper_lids, 12 if wide else 10),
+        )
+
+    async def close(self):
+        await asyncio.gather(
+            move(self.lower_lids, 10.0),
+            move(self.upper_lids, 7.0),
+        )
+
+    
+    async def blink_loop(self):
+
+        while True:
+            await self.close()
+            await self.open(wide=True)
+            await self.open()
+            await asyncio.sleep(random.random() * 3.0)
+
+    async def look(self):
+        """
+        UP
+        self.right_y = 0
+        self.left_y = 180
+
+        DOWN
+        self.right_y = 180
+        self.left_y = 0
+
+        RIGHT 
+        self.right_x = 0
+        self.left_x = 0
+
+        LEFT
+        self.right_x = 180
+        self.left_x = 180
+
+        """
+
+
+        await asyncio.gather(
+            move(self.lower_lids, 10.0),
+            move(self.upper_lids, 7.0),
+        )
+
 
 
 class Servos:
@@ -45,13 +148,14 @@ class Servos:
 
         self.eyes = Eyes(
             lower_lids=Servo(self.pca.channels[0], actuation_range=30),
-            right_y=Servo(self.pca.channels[1], actuation_range=30),
-            right_x=Servo(self.pca.channels[2], actuation_range=30), 
+            right_y=Servo(self.pca.channels[1], actuation_range=180),
+            right_x=Servo(self.pca.channels[2], actuation_range=180), 
             
             upper_lids=Servo(self.pca.channels[4], actuation_range=30),
-            left_y=Servo(self.pca.channels[5], actuation_range=30),
-            left_x=Servo(self.pca.channels[6], actuation_range=30),
+            left_y=Servo(self.pca.channels[5], actuation_range=180),
+            left_x=Servo(self.pca.channels[6], actuation_range=180),
         )
+        self.eyes.init(self.config)
 
     def rotate(self):
         logger.info("triggering servos")
@@ -64,9 +168,3 @@ class Servos:
         logger.info("done")
 
 
-    def smile(self):
-        self.eye_l.throttle = FAST
-        self.eye_r.throttle = FAST
-        time.sleep(.001)
-        self.eye_l.throttle = 0
-        self.eye_r.throttle = 0

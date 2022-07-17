@@ -21,6 +21,7 @@ pip = "*"
 adafruit-pca9685 = "*"
 adafruit-circuitpython-servokit = "*"
 pyttsx3 = "*"
+pydantic = "*"
 
 [dev-packages]
 ipython = "*"

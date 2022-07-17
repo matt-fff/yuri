@@ -1,31 +1,56 @@
-from dataclasses import dataclass, field
+from dataclasses import field
+from pydantic.dataclasses import dataclass
+from pydantic import BaseModel
 
 import board
-import yaml
+import json
+from typing import Optional
+from loguru import logger
+
+Pin = board.pin.Pin
+
+class Pins(BaseModel):
+    dotstar_clock: Pin = board.D6
+    dotstar_data: Pin = board.D5
+    button: Pin = board.D17
+    joydown: Pin = board.D27
+    joyleft: Pin = board.D22
+    joyup: Pin = board.D23
+    joyright: Pin = board.D24
+    joyselect: Pin = board.D16
+    
+    class Config:
+        arbitrary_types_allowed = True
 
 
-@dataclass
-class Pins:
-    dotstar_clock: int = board.D6
-    dotstar_data: int = board.D5
-    button: int = board.D17
-    joydown: int = board.D27
-    joyleft: int = board.D22
-    joyup: int = board.D23
-    joyright: int = board.D24
-    joyselect: int = board.D16
+class Eye(BaseModel):
+    neutral_x: Optional[float] = None
+    neutral_y: Optional[float] = None
 
-@dataclass
-class Config:
+class Config(BaseModel):
     listener_type: str = "sphinx"
     speaker_type: str = "google"
-    pins: Pins = field(default_factory=Pins)
+    pins: Pins = Pins()
+    left_eye: Eye = Eye()
+    right_eye: Eye = Eye()
+
+    def save(self, location: str):
+        with open(location, "w") as config_file:
+            config_file.write(json.dumps(self.dict(exclude={"pins"}), indent=2))
+
 
 
 class ConfigFactory:
     @classmethod
     def create(cls, location: str) -> Config:
         with open(location) as config_file:
-            file_data = yaml.load(config_file, Loader=yaml.FullLoader)
+            obj = {}
+            try:
+                obj = json.loads(config_file.read())
+            except json.JSONDecodeError:
+                logger.warning("error parsing config")
 
-        return Config(**(file_data or {}))
+            config = Config.parse_obj(obj) 
+
+
+        return config

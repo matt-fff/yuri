@@ -1,0 +1,12 @@
+{
+  "listener_type": "sphinx",
+  "speaker_type": "google",
+  "left_eye": {
+    "neutral_x": 129.9125660837739,
+    "neutral_y": 100.04676697844651
+  },
+  "right_eye": {
+    "neutral_x": 80.42903619357463,
+    "neutral_y": 129.9125660837739
+  }
+}

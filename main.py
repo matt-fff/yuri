@@ -1,6 +1,7 @@
 from typing import Optional
 
 import typer
+import asyncio
 from loguru import logger
 
 from yuri.config import Config, ConfigFactory
@@ -13,7 +14,7 @@ from yuri.servos import Servos
 
 app = typer.Typer()
 
-DEFAULT_CONFIG_LOCATION = "yuri.yaml"
+DEFAULT_CONFIG_LOCATION = "yuri.json"
 
 
 def get_config(config_path: Optional[str]) -> Config:
@@ -54,12 +55,16 @@ def colors(seconds: int = 3, config_path: Optional[str] = None):
     lights.cycle_colors(seconds)
 
 
+async def asay(message: str, config: Config):
+    servos = Servos(config)
+    speaker = SpeakerFactory.create(config)
+    await asyncio.gather(servos.eyes.blink_loop(), speaker.say(message))
+
 @app.command()
 def say(message: str, config_path: Optional[str] = None):
     config = get_config(config_path)
-    speaker = SpeakerFactory.create(config)
-    speaker.say(message)
-
+    asyncio.run(asay(message, config))
+    
 
 @app.command()
 def transcribe(config_path: Optional[str] = None):
@@ -69,6 +74,15 @@ def transcribe(config_path: Optional[str] = None):
     transcription = listener.transcribe(audio)
     logger.info(transcription)
 
+@app.command()
+def calibrate(config_path: Optional[str] = None):
+    config = get_config(config_path)
+    servos = Servos(config)
+    speaker = SpeakerFactory.create(config)
+    asyncio.run(speaker.say("Let's calibrate."))
+    inputs = Input(config)
+    servos.eyes.calibrate(inputs, config)
+    config.save(config_path or DEFAULT_CONFIG_LOCATION)
 
 @app.command()
 def repeat(config_path: Optional[str] = None):

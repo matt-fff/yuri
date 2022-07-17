@@ -16,12 +16,12 @@ class Speaker(metaclass=ABCMeta):
         self.config = config
 
     @abstractmethod
-    def say(self, message: str):
+    async def say(self, message: str):
         raise NotImplementedError()
 
 
 class GoogleSpeaker(Speaker):
-    def say(self, message: str):
+    async def say(self, message: str):
         logger.info("say.start", message=message)
 
         mp3_fp = BytesIO()
@@ -42,7 +42,7 @@ class Ttsx3Speaker(Speaker):
         self.engine.setProperty("voice", self.engine.getProperty("voices")[15].id)
         self.engine.setProperty("rate", 160)
 
-    def say(self, message: str):
+    async def say(self, message: str):
         logger.info("say.start", message=message)
         self.engine.say(message)
         self.engine.runAndWait()
