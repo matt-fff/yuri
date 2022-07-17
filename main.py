@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from typing import Optional
 
 import typer
@@ -81,7 +83,7 @@ def calibrate(config_path: Optional[str] = None):
     speaker = SpeakerFactory.create(config)
     asyncio.run(speaker.say("Let's calibrate."))
     inputs = Input(config)
-    servos.eyes.calibrate(inputs, config)
+    servos.eyes.calibrate(inputs)
     config.save(config_path or DEFAULT_CONFIG_LOCATION)
 
 @app.command()

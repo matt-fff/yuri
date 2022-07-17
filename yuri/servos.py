@@ -1,4 +1,5 @@
 import time
+from datetime import datetime, timedelta
 import board
 import busio
 import asyncio
@@ -13,45 +14,29 @@ from adafruit_motor.servo import Servo
 from adafruit_servokit import ServoKit
 from adafruit_pca9685 import PCA9685
 
-from yuri.config import Config
+from yuri.config import Config, EyesConfig
 from yuri.input import Input
 
+MOVE_TIMEOUT = timedelta(seconds=3)
+
 async def move(servo: Servo, target_angle: float, smoothing_factor: float = 0.80):
+    start_time = datetime.utcnow()
+
     # Keep iterating until the target angle's reached
     while not math.isclose(servo.angle, target_angle, rel_tol=0.02):
         current_angle = servo.angle
         smoothed_angle = (target_angle * smoothing_factor) + (current_angle * (1.0 - smoothing_factor))
 
-        servo.angle = smoothed_angle
+        servo.angle = max(min(smoothed_angle, servo.actuation_range), 0)
         await asyncio.sleep(0.02)
 
-async def move_offset(servos: List[Servo], angle_offset: float, smoothing_factor: float = 0.80):
-
-    original_angles = [servo.angle for servo in servos]
-
-    def target_angle(idx: int) -> float:
-        return original_angles[idx] + angle_offset
-
-    def complete() -> bool:
-        for idx, servo in enumerate(servos):
-            if not math.isclose(servo.angle, target_angle(idx), rel_tol=0.02):
-                return False
-        return True
-
-    while not complete():
-        for idx, servo in enumerate(servos):
-            current_angle = servo.angle
-            smoothed_angle = (target_angle(idx) * smoothing_factor) + (current_angle * (1.0 - smoothing_factor))
-
-            servo.angle = smoothed_angle
-        logger.debug(f"angles: {[servo.angle for servo in servos]}")
-        await asyncio.sleep(0.02)
-
+        if datetime.utcnow() - start_time > MOVE_TIMEOUT:
+            break
 
 
 @dataclass
 class Eyes:
-    config: Config
+    config: EyesConfig
 
     upper_lids: Servo
     lower_lids: Servo
@@ -62,14 +47,6 @@ class Eyes:
     right_y: Servo
     right_x: Servo
 
-
-    @property
-    def lid_smoothing(self):
-        return self.config.eyelid_movement_smoothing
-
-    @property
-    def ball_smoothing(self):
-        return self.config.eyeball_movement_smoothing
 
     @property
     def servos(self) -> List[Servo]:
@@ -94,22 +71,25 @@ class Eyes:
         if self.config.right_eye.neutral_y is not None:
             self.right_y.angle = self.config.right_eye.neutral_y
 
-        # Set everything to neutral
+        # Set everything to neutral if its out of range
         for servo in self.servos:
             if 0.0 <= servo.angle <= servo.actuation_range:
                 continue
             servo.angle = 0.5 * servo.actuation_range
     
     def calibrate(self, inputs: Input):
+        logger.info("run calibration")
         asyncio.run(self.open(True))
+        incr = 3
         for eye in ("left", "right"):
             logger.info(f"calibrate {eye} eye")
             y = getattr(self, f"{eye}_y")
             x = getattr(self, f"{eye}_x")
-            incr = 3
 
-            while inputs.button.value:
-                logger.info(f"x:{x.angle:.2f} | y:{y.angle:.2f}")
+            skip = False
+            while inputs.button.value and not skip:
+                if random.random() > .8:
+                    logger.info(f"x:{x.angle:.2f} | y:{y.angle:.2f}")
                 if not inputs.joyup.value:
                     y.angle = min(y.angle + incr, y.actuation_range)
                 if not inputs.joydown.value:
@@ -118,26 +98,79 @@ class Eyes:
                     x.angle = max(x.angle - incr, 0)
                 if not inputs.joyright.value:
                     x.angle = min(x.angle + incr, x.actuation_range)
+                if not inputs.joyselect.value:
+                    skip = True
 
-                time.sleep(0.3)
-            config_eye = getattr(self.config, f"{eye}_eye")
-            config_eye.neutral_x = x.angle
-            config_eye.neutral_y = y.angle
+                time.sleep(0.1)
+
+            if not skip:
+                config_eye = getattr(self.config, f"{eye}_eye")
+                config_eye.neutral_x = x.angle
+                config_eye.neutral_y = y.angle
             logger.info(f"Done calibrating {eye} eye")
 
             time.sleep(1.5)
 
+        logger.info("closed position")
+
+        for lid in ("upper", "lower"):
+            lid_servo = getattr(self, f"{lid}_lids")
+            lid_config = getattr(self.config, f"{lid}_lids")
+
+            for angle_type, prep_func in (
+                ("closed_y", self.close()),
+                ("wide_open_y",self.open(True)),
+                ("open_y",self.open()),
+            ):
+                logger.info(f"calibrate {lid} eyelids {angle_type}")
+                asyncio.run(prep_func)
+
+                skip = False
+                while inputs.button.value and not skip:
+                    if random.random() > .8:
+                        logger.info(f"lid_servo:{lid_servo.angle:.2f}")
+                    if not inputs.joyup.value:
+                        lid_servo.angle = min(lid_servo.angle + incr, lid_servo.actuation_range)
+                    if not inputs.joydown.value:
+                        lid_servo.angle = max(lid_servo.angle - incr, 0)
+
+                    if not inputs.joyselect.value:
+                        skip = True
+
+                    time.sleep(0.1)
+                if not skip:
+                    setattr(lid_config, angle_type, lid_servo.angle)
+                logger.info(f"Done calibrating {lid} eyelids {angle_type}")
+                time.sleep(1)
+
+
 
     async def open(self, wide: bool = False):
         await asyncio.gather(
-            move(self.lower_lids, 15 if wide else 13, smoothing_factor=self.lid_smoothing),
-            move(self.upper_lids, 12 if wide else 10, smoothing_factor=self.lid_smoothing),
+            move(
+                self.lower_lids,
+                self.config.lower_lids.wide_open_y if wide else self.config.lower_lids.open_y,
+                smoothing_factor=self.config.lower_lids.movement_smoothing
+            ),
+            move(
+                self.upper_lids,
+                self.config.upper_lids.wide_open_y if wide else self.config.upper_lids.open_y,
+                smoothing_factor=self.config.upper_lids.movement_smoothing
+            ),
         )
 
     async def close(self):
         await asyncio.gather(
-            move(self.lower_lids, 10.0, smoothing_factor=self.lid_smoothing),
-            move(self.upper_lids, 7.0, smoothing_factor=self.lid_smoothing),
+            move(
+                self.lower_lids,
+                self.config.lower_lids.closed_y,
+                smoothing_factor=self.config.lower_lids.movement_smoothing
+            ),
+            move(
+                self.upper_lids,
+                self.config.upper_lids.closed_y,
+                smoothing_factor=self.config.upper_lids.movement_smoothing
+            ),
         )
 
     
@@ -178,21 +211,31 @@ class Eyes:
 
     async def vert_look(self, offset: float):
         await asyncio.gather(
-            move(self.left_y, self.left_y.angle + offset, smoothing_factor=self.ball_smoothing),
-            move(self.right_y, self.right_y.angle - offset, smoothing_factor=self.ball_smoothing),
+            move(
+                self.left_y,
+                self.left_y.angle + offset,
+                smoothing_factor=self.config.left_eye.movement_smoothing
+            ),
+            move(
+                self.right_y,
+                self.right_y.angle - offset,
+                smoothing_factor=self.config.right_eye.movement_smoothing
+            ),
         )
-        await asyncio.sleep(random.random() * 2.0)
-        await asyncio.gather(
-            move(self.left_y, self.left_y.angle - offset, smoothing_factor=self.ball_smoothing),
-            move(self.right_y, self.right_y.angle + offset, smoothing_factor=self.ball_smoothing),
-        )
-        await asyncio.sleep(random.random() * 2.0)
 
     async def horiz_look(self, offset: float):
-        await move_offset([self.left_x, self.right_x], offset, smoothing_factor=self.ball_smoothing)
-        await asyncio.sleep(random.random() * 2.0)
-        await move_offset([self.left_x, self.right_x], -offset, smoothing_factor=self.ball_smoothing)
-        await asyncio.sleep(random.random() * 2.0)
+        await asyncio.gather(
+            move(
+                self.left_x,
+                self.left_x.angle + offset,
+                smoothing_factor=self.config.left_eye.movement_smoothing
+            ),
+            move(
+                self.right_x,
+                self.right_x.angle - offset,
+                smoothing_factor=self.config.right_eye.movement_smoothing
+            ),
+        )
     
 
 class Servos:
@@ -202,14 +245,14 @@ class Servos:
         pca.frequency = 100
 
         self.eyes = Eyes(
-            config=config,
-            lower_lids=Servo(pca.channels[0], actuation_range=30),
-            right_y=Servo(pca.channels[1], actuation_range=180),
-            right_x=Servo(pca.channels[2], actuation_range=180), 
+            config=config.eyes,
+            lower_lids=Servo(pca.channels[0]),
+            right_y=Servo(pca.channels[1]),
+            right_x=Servo(pca.channels[2]), 
             
-            upper_lids=Servo(pca.channels[4], actuation_range=30),
-            left_y=Servo(pca.channels[5], actuation_range=180),
-            left_x=Servo(pca.channels[6], actuation_range=180),
+            upper_lids=Servo(pca.channels[4]),
+            left_y=Servo(pca.channels[5]),
+            left_x=Servo(pca.channels[6]),
         )
         self.eyes.init()
 
