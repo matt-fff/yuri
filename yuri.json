@@ -2,11 +2,13 @@
   "listener_type": "sphinx",
   "speaker_type": "google",
   "left_eye": {
-    "neutral_x": 129.9125660837739,
+    "neutral_x": 127.57015046766979,
     "neutral_y": 100.04676697844651
   },
   "right_eye": {
-    "neutral_x": 80.42903619357463,
+    "neutral_x": 97.4115494103294,
     "neutral_y": 129.9125660837739
-  }
+  },
+  "eyelid_movement_smoothing": 0.8,
+  "eyeball_movement_smoothing": 0.8
 }

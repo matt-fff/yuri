@@ -33,6 +33,8 @@ class Config(BaseModel):
     pins: Pins = Pins()
     left_eye: Eye = Eye()
     right_eye: Eye = Eye()
+    eyelid_movement_smoothing: float = 0.80
+    eyeball_movement_smoothing: float = 0.80
 
     def save(self, location: str):
         with open(location, "w") as config_file:

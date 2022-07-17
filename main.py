@@ -58,7 +58,7 @@ def colors(seconds: int = 3, config_path: Optional[str] = None):
 async def asay(message: str, config: Config):
     servos = Servos(config)
     speaker = SpeakerFactory.create(config)
-    await asyncio.gather(servos.eyes.blink_loop(), speaker.say(message))
+    await asyncio.gather(servos.eyes.loop(), speaker.say(message))
 
 @app.command()
 def say(message: str, config_path: Optional[str] = None):
