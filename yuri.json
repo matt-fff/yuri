@@ -3,25 +3,25 @@
   "speaker_type": "google",
   "eyes": {
     "left_eye": {
-      "neutral_x": 116.15087433916226,
-      "neutral_y": 89.79869865799105,
+      "neutral_x": 137.23261488409923,
+      "neutral_y": 122.59251728344856,
       "movement_smoothing": 0.8
     },
     "right_eye": {
-      "neutral_x": 101.5107767385116,
-      "neutral_y": 179.98169987799918,
+      "neutral_x": 6.642944286295243,
+      "neutral_y": 32.116714111427406,
       "movement_smoothing": 0.8
     },
     "upper_lids": {
-      "closed_y": -0.09150061000406669,
-      "open_y": 107.95241968279788,
-      "wide_open_y": 136.06140707604717,
+      "closed_y": 50.563237088247256,
+      "open_y": 90.38430256201708,
+      "wide_open_y": 113.22285481903214,
       "movement_smoothing": 0.8
     },
     "lower_lids": {
-      "closed_y": 29.7742984953233,
-      "open_y": 66.960146400976,
-      "wide_open_y": 95.94753965026433,
+      "closed_y": 131.96217974786498,
+      "open_y": 150.70150467669782,
+      "wide_open_y": 177.9320862139081,
       "movement_smoothing": 0.8
     }
   }

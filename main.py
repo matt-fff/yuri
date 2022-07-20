@@ -81,9 +81,11 @@ def calibrate(config_path: Optional[str] = None):
     config = get_config(config_path)
     servos = Servos(config)
     speaker = SpeakerFactory.create(config)
-    asyncio.run(speaker.say("Let's calibrate."))
     inputs = Input(config)
-    servos.eyes.calibrate(inputs)
+
+    asyncio.run(
+        servos.eyes.calibrate(inputs, speaker=speaker)
+    )
     config.save(config_path or DEFAULT_CONFIG_LOCATION)
 
 @app.command()

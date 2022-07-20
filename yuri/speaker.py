@@ -20,6 +20,13 @@ class Speaker(metaclass=ABCMeta):
         raise NotImplementedError()
 
 
+class FakeSpeaker(Speaker):
+    def __init__(self, *args):
+        super().__init__(None)
+
+    async def say(self, message: str):
+        logger.info(message)
+
 class GoogleSpeaker(Speaker):
     async def say(self, message: str):
         logger.info("say.start", message=message)
@@ -53,6 +60,7 @@ class SpeakerFactory:
     SPEAKERS = {
         "google": GoogleSpeaker,
         "pyttsx3": Ttsx3Speaker,
+        "fake": FakeSpeaker,
     }
 
     @classmethod

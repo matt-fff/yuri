@@ -6,7 +6,7 @@ import asyncio
 import math
 import random
 
-from typing import List
+from typing import List, Optional
 from dataclasses import dataclass
 
 from loguru import logger
@@ -14,10 +14,17 @@ from adafruit_motor.servo import Servo
 from adafruit_servokit import ServoKit
 from adafruit_pca9685 import PCA9685
 
+from yuri.speaker import FakeSpeaker, Speaker
 from yuri.config import Config, EyesConfig
 from yuri.input import Input
 
 MOVE_TIMEOUT = timedelta(seconds=3)
+
+def set_angle(servo: Servo, target_angle: Optional[float] = None):
+    if target_angle is None:
+        target_angle = servo.angle
+
+    servo.angle = max(min(target_angle, servo.actuation_range), 0)
 
 async def move(servo: Servo, target_angle: float, smoothing_factor: float = 0.80):
     start_time = datetime.utcnow()
@@ -27,7 +34,7 @@ async def move(servo: Servo, target_angle: float, smoothing_factor: float = 0.80
         current_angle = servo.angle
         smoothed_angle = (target_angle * smoothing_factor) + (current_angle * (1.0 - smoothing_factor))
 
-        servo.angle = max(min(smoothed_angle, servo.actuation_range), 0)
+        set_angle(servo, smoothed_angle)
         await asyncio.sleep(0.02)
 
         if datetime.utcnow() - start_time > MOVE_TIMEOUT:
@@ -61,28 +68,23 @@ class Eyes:
 
 
     def init(self):
-
         if self.config.left_eye.neutral_x is not None:
-            self.left_x.angle = self.config.left_eye.neutral_x
+            set_angle(self.left_x, self.config.left_eye.neutral_x)
         if self.config.left_eye.neutral_y is not None:
-            self.left_y.angle = self.config.left_eye.neutral_y
+            set_angle(self.left_y, self.config.left_eye.neutral_y)
         if self.config.right_eye.neutral_x is not None:
-            self.right_x.angle = self.config.right_eye.neutral_x
+            set_angle(self.right_x, self.config.right_eye.neutral_x)
         if self.config.right_eye.neutral_y is not None:
-            self.right_y.angle = self.config.right_eye.neutral_y
-
-        # Set everything to neutral if its out of range
-        for servo in self.servos:
-            if 0.0 <= servo.angle <= servo.actuation_range:
-                continue
-            servo.angle = 0.5 * servo.actuation_range
+            set_angle(self.right_y, self.config.right_eye.neutral_y)
     
-    def calibrate(self, inputs: Input):
-        logger.info("run calibration")
-        asyncio.run(self.open(True))
+    async def calibrate(self, inputs: Input, speaker: Speaker = FakeSpeaker(), helpers: bool = True):
+        await speaker.say("run calibration")
+
+        if helpers:
+            await self.open(True)
         incr = 3
         for eye in ("left", "right"):
-            logger.info(f"calibrate {eye} eye")
+            await speaker.say(f"calibrate {eye} eye")
             y = getattr(self, f"{eye}_y")
             x = getattr(self, f"{eye}_x")
 
@@ -91,17 +93,17 @@ class Eyes:
                 if random.random() > .8:
                     logger.info(f"x:{x.angle:.2f} | y:{y.angle:.2f}")
                 if not inputs.joyup.value:
-                    y.angle = min(y.angle + incr, y.actuation_range)
+                    set_angle(y, y.angle + incr)
                 if not inputs.joydown.value:
-                    y.angle = max(y.angle - incr, 0)
+                    set_angle(y, y.angle - incr)
                 if not inputs.joyleft.value:
-                    x.angle = max(x.angle - incr, 0)
+                    set_angle(x, x.angle - incr)
                 if not inputs.joyright.value:
-                    x.angle = min(x.angle + incr, x.actuation_range)
+                    set_angle(x, x.angle + incr)
                 if not inputs.joyselect.value:
                     skip = True
 
-                time.sleep(0.1)
+                await asyncio.sleep(0.1)
 
             if not skip:
                 config_eye = getattr(self.config, f"{eye}_eye")
@@ -109,13 +111,12 @@ class Eyes:
                 config_eye.neutral_y = y.angle
             logger.info(f"Done calibrating {eye} eye")
 
-            time.sleep(1.5)
-
-        logger.info("closed position")
+            await asyncio.sleep(1.5)
 
         for lid in ("upper", "lower"):
             lid_servo = getattr(self, f"{lid}_lids")
             lid_config = getattr(self.config, f"{lid}_lids")
+            await speaker.say(f"calibrate {lid} eyelids")
 
             for angle_type, prep_func in (
                 ("closed_y", self.close()),
@@ -123,26 +124,28 @@ class Eyes:
                 ("open_y",self.open()),
             ):
                 logger.info(f"calibrate {lid} eyelids {angle_type}")
-                asyncio.run(prep_func)
+                
+                if helpers:
+                    await prep_func
 
                 skip = False
                 while inputs.button.value and not skip:
                     if random.random() > .8:
                         logger.info(f"lid_servo:{lid_servo.angle:.2f}")
                     if not inputs.joyup.value:
-                        lid_servo.angle = min(lid_servo.angle + incr, lid_servo.actuation_range)
+                        set_angle(lid_servo, lid_servo.angle + incr)
                     if not inputs.joydown.value:
-                        lid_servo.angle = max(lid_servo.angle - incr, 0)
-
+                        set_angle(lid_servo, lid_servo.angle - incr)
                     if not inputs.joyselect.value:
                         skip = True
 
-                    time.sleep(0.1)
+                    await asyncio.sleep(0.1)
                 if not skip:
                     setattr(lid_config, angle_type, lid_servo.angle)
                 logger.info(f"Done calibrating {lid} eyelids {angle_type}")
-                time.sleep(1)
+                await asyncio.sleep(1)
 
+        await speaker.say("done with calibration")
 
 
     async def open(self, wide: bool = False):
@@ -232,7 +235,7 @@ class Eyes:
             ),
             move(
                 self.right_x,
-                self.right_x.angle - offset,
+                self.right_x.angle + offset,
                 smoothing_factor=self.config.right_eye.movement_smoothing
             ),
         )
