@@ -1,5 +1,3 @@
-from dataclasses import field
-from pydantic.dataclasses import dataclass
 from pydantic import BaseModel
 
 import board
@@ -60,7 +58,9 @@ class Config(BaseModel):
 
     def save(self, location: str):
         with open(location, "w") as config_file:
-            config_file.write(json.dumps(self.dict(exclude={"pins"}), indent=2))
+            config_file.write(
+                json.dumps(self.dict(exclude={"pins"}), indent=2)
+            )
 
 
 class ConfigFactory:

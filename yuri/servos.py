@@ -1,4 +1,3 @@
-import time
 from datetime import datetime, timedelta
 import board
 import busio
@@ -11,7 +10,6 @@ from dataclasses import dataclass
 
 from loguru import logger
 from adafruit_motor.servo import Servo
-from adafruit_servokit import ServoKit
 from adafruit_pca9685 import PCA9685
 
 from yuri.speaker import FakeSpeaker, Speaker
@@ -28,7 +26,9 @@ def set_angle(servo: Servo, target_angle: Optional[float] = None):
     servo.angle = max(min(target_angle, servo.actuation_range), 0)
 
 
-async def move(servo: Servo, target_angle: float, smoothing_factor: float = 0.80):
+async def move(
+    servo: Servo, target_angle: float, smoothing_factor: float = 0.80
+):
     start_time = datetime.utcnow()
     target_angle = max(min(target_angle, servo.actuation_range), 0)
 
@@ -75,7 +75,9 @@ class Eyes:
         ]
 
     def lid_offset(
-        self, new_left: Optional[float] = None, new_right: Optional[float] = None
+        self,
+        new_left: Optional[float] = None,
+        new_right: Optional[float] = None,
     ) -> float:
         left_offset = self.eye_y_offset("left", new_angle=new_left)
         right_offset = self.eye_y_offset("right", new_angle=new_right)
@@ -83,7 +85,9 @@ class Eyes:
         logger.debug(f"leftoff:{left_offset} rightoff:{right_offset}")
         return ((left_offset - right_offset) / 2.0) * 0.8
 
-    def eye_y_offset(self, eye: str, new_angle: Optional[float] = None) -> float:
+    def eye_y_offset(
+        self, eye: str, new_angle: Optional[float] = None
+    ) -> float:
         servo = getattr(self, f"{eye}_y")
         config = getattr(self.config, f"{eye}_eye")
 
@@ -102,7 +106,10 @@ class Eyes:
             set_angle(self.right_y, self.config.right_eye.neutral_y)
 
     async def calibrate(
-        self, inputs: Input, speaker: Speaker = FakeSpeaker(), helpers: bool = True
+        self,
+        inputs: Input,
+        speaker: Speaker = FakeSpeaker(),
+        helpers: bool = True,
     ):
         await speaker.say("run calibration")
 
@@ -213,7 +220,9 @@ class Eyes:
             await self.open()
             await asyncio.sleep(random.random() * 3.0)
 
-    async def horiz_look_loop(self, min_offset: float = 5.0, max_offset: float = 20.0):
+    async def horiz_look_loop(
+        self, min_offset: float = 5.0, max_offset: float = 20.0
+    ):
         while True:
             offset = min_offset + (random.random() * (max_offset - min_offset))
             await self.horiz_look(offset)
@@ -223,7 +232,9 @@ class Eyes:
             self.init()
             await asyncio.sleep(random.random())
 
-    async def vert_look_loop(self, min_offset: float = 5.0, max_offset: float = 15.0):
+    async def vert_look_loop(
+        self, min_offset: float = 5.0, max_offset: float = 15.0
+    ):
         while True:
             offset = min_offset + (random.random() * (max_offset - min_offset))
             await self.vert_look(offset)
@@ -310,6 +321,9 @@ class Servos:
             left_x=Servo(pca.channels[6]),
         )
         self.eyes.init()
+
+    async def loop(self):
+        await self.eyes.loop()
 
     def rotate(self):
         logger.info("triggering servos")

@@ -12,6 +12,7 @@ from yuri.speaker import SpeakerFactory
 from yuri.lights import Lights
 from yuri.input import Input
 from yuri.servos import Servos
+from yuri.yuri import Yuri
 
 # from yuri.textgen import TextGen
 
@@ -41,7 +42,9 @@ def servos(config_path: Optional[str] = None):
 
 
 @app.command()
-def converse(max_seconds: Optional[int] = None, config_path: Optional[str] = None):
+def converse(
+    max_seconds: Optional[int] = None, config_path: Optional[str] = None
+):
     config = get_config(config_path)
     logger.error("converse is not yet implemented")
 
@@ -57,19 +60,14 @@ def inputs(seconds: int = 10, config_path: Optional[str] = None):
 def colors(seconds: int = 3, config_path: Optional[str] = None):
     config = get_config(config_path)
     lights = Lights(config)
-    lights.cycle_colors(seconds)
-
-
-async def asay(message: str, config: Config):
-    servos = Servos(config)
-    speaker = SpeakerFactory.create(config)
-    await asyncio.gather(servos.eyes.loop(), speaker.say(message))
+    asyncio.run(lights.cycle_colors(seconds))
 
 
 @app.command()
 def say(message: str, config_path: Optional[str] = None):
     config = get_config(config_path)
-    asyncio.run(asay(message, config))
+    speaker = SpeakerFactory.create(config)
+    asyncio.run(speaker.say(message))
 
 
 @app.command()
@@ -103,7 +101,14 @@ def repeat(config_path: Optional[str] = None):
     logger.info(transcription)
 
     speaker = SpeakerFactory.create(config)
-    speaker.say(transcription.text)
+    asyncio.run(speaker.say(transcription.text))
+
+
+@app.callback(invoke_without_command=True)
+def run(config_path: Optional[str] = None):
+    config = get_config(config_path)
+    yuri = Yuri(config)
+    asyncio.run(yuri.run())
 
 
 if __name__ == "__main__":

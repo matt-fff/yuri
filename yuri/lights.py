@@ -1,4 +1,7 @@
-import time
+import asyncio
+
+from typing import Optional
+
 import adafruit_dotstar
 from datetime import datetime, timedelta
 from loguru import logger
@@ -10,7 +13,10 @@ class Lights:
     def __init__(self, config: Config):
         self.config = config
         self.dots = adafruit_dotstar.DotStar(
-            config.pins.dotstar_clock, config.pins.dotstar_data, 3, brightness=0.2
+            config.pins.dotstar_clock,
+            config.pins.dotstar_data,
+            3,
+            brightness=0.2,
         )
 
     @staticmethod
@@ -31,8 +37,10 @@ class Lights:
         for i in range(3):
             self.dots[i] = 0
 
-    def cycle_colors(self, seconds: int):
-        stop_at = datetime.utcnow() + timedelta(seconds=seconds)
+    async def cycle_colors(self, seconds: Optional[int] = None):
+        stop_at = datetime.utcnow() + timedelta(
+            seconds=seconds if seconds else 999999
+        )
         logger.info("cycle_colors.start")
 
         while datetime.utcnow() < stop_at:
@@ -41,7 +49,7 @@ class Lights:
                     rc_index = (i * 256 // 3) + j * 5
                     self.dots[i] = self.wheel(rc_index & 255)
                 self.dots.show()
-                time.sleep(0.01)
+                await asyncio.sleep(0.01)
 
         self.off()
         logger.info("cycle_colors.done")

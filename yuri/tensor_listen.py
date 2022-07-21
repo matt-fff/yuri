@@ -83,7 +83,9 @@ ipdb.set_trace()
 
 files_ds = tf.data.Dataset.from_tensor_slices(train_files)
 
-waveform_ds = files_ds.map(map_func=get_waveform_and_label, num_parallel_calls=AUTOTUNE)
+waveform_ds = files_ds.map(
+    map_func=get_waveform_and_label, num_parallel_calls=AUTOTUNE
+)
 
 rows = 3
 cols = 3

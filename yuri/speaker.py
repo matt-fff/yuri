@@ -48,7 +48,9 @@ class Ttsx3Speaker(Speaker):
         # voices 2, 13, 14, 17
         # 61 = Russian
         # 62 = Slovak
-        self.engine.setProperty("voice", self.engine.getProperty("voices")[15].id)
+        self.engine.setProperty(
+            "voice", self.engine.getProperty("voices")[15].id
+        )
         self.engine.setProperty("rate", 160)
 
     async def say(self, message: str):
