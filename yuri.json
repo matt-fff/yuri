@@ -8,20 +8,20 @@
       "movement_smoothing": 0.8
     },
     "right_eye": {
-      "neutral_x": 6.642944286295243,
-      "neutral_y": 32.116714111427406,
+      "neutral_x": 8.399755998373323,
+      "neutral_y": 27.13908092720618,
       "movement_smoothing": 0.8
     },
     "upper_lids": {
-      "closed_y": 50.563237088247256,
-      "open_y": 90.38430256201708,
-      "wide_open_y": 113.22285481903214,
+      "closed_y": 58.76169174461163,
+      "open_y": 83.06425376169175,
+      "wide_open_y": 127.27734851565678,
       "movement_smoothing": 0.8
     },
     "lower_lids": {
-      "closed_y": 131.96217974786498,
-      "open_y": 150.70150467669782,
-      "wide_open_y": 177.9320862139081,
+      "closed_y": 133.42618950793005,
+      "open_y": 155.09353395689303,
+      "wide_open_y": 179.98169987799918,
       "movement_smoothing": 0.8
     }
   }

@@ -32,13 +32,14 @@ async def move(servo: Servo, target_angle: float, smoothing_factor: float = 0.80
 
     # Keep iterating until the target angle's reached
     while not math.isclose(servo.angle, target_angle, rel_tol=0.02):
-        current_angle = servo.angle
-        smoothed_angle = (target_angle * smoothing_factor) + (current_angle * (1.0 - smoothing_factor))
+        last_angle = servo.angle
+        smoothed_angle = (target_angle * smoothing_factor) + (last_angle * (1.0 - smoothing_factor))
 
         set_angle(servo, smoothed_angle)
         await asyncio.sleep(0.02)
 
-        if datetime.utcnow() - start_time > MOVE_TIMEOUT:
+        # Bail if there's not enough movement or a timeout
+        if math.isclose(servo.angle, last_angle, rel_tol=0.02) or datetime.utcnow() - start_time > MOVE_TIMEOUT:
             break
 
 
@@ -74,7 +75,7 @@ class Eyes:
         right_offset = self.eye_y_offset("right", new_angle=new_right)
 
         logger.debug(f"leftoff:{left_offset} rightoff:{right_offset}")
-        return (left_offset - right_offset) / 2.0 - 5
+        return ((left_offset - right_offset) / 2.0) * 0.8
 
 
     def eye_y_offset(self, eye: str, new_angle: Optional[float] = None) -> float:
@@ -197,12 +198,12 @@ class Eyes:
     async def blink_loop(self):
         while True:
             await self.close()
-            if random.random() > 0.8:
-                await self.open(wide=True)
+            # if random.random() > 0.8:
+                # await self.open(wide=True)
             await self.open()
             await asyncio.sleep(random.random() * 3.0)
 
-    async def horiz_look_loop(self, min_offset: float = 5.0, max_offset: float = 15.0):
+    async def horiz_look_loop(self, min_offset: float = 5.0, max_offset: float = 20.0):
         while True:
             offset = min_offset + (random.random() * (max_offset - min_offset))
             await self.horiz_look(offset)
@@ -212,7 +213,7 @@ class Eyes:
             self.init()
             await asyncio.sleep(random.random())
 
-    async def vert_look_loop(self, min_offset: float = 10.0, max_offset: float = 25.0):
+    async def vert_look_loop(self, min_offset: float = 5.0, max_offset: float = 15.0):
         while True:
             offset = min_offset + (random.random() * (max_offset - min_offset))
             await self.vert_look(offset)
@@ -238,16 +239,6 @@ class Eyes:
 
         await asyncio.gather(
             move(
-                self.left_y,
-                new_left,
-                smoothing_factor=self.config.left_eye.movement_smoothing
-            ),
-            move(
-                self.right_y,
-                new_right,
-                smoothing_factor=self.config.right_eye.movement_smoothing
-            ),
-            move(
                 self.lower_lids,
                 self.config.lower_lids.open_y - lid_offset,
                 smoothing_factor=self.config.lower_lids.movement_smoothing
@@ -257,10 +248,30 @@ class Eyes:
                 self.config.upper_lids.open_y + lid_offset,
                 smoothing_factor=self.config.upper_lids.movement_smoothing
             ),
+            move(
+                self.left_y,
+                new_left,
+                smoothing_factor=self.config.left_eye.movement_smoothing
+            ),
+            move(
+                self.right_y,
+                new_right,
+                smoothing_factor=self.config.right_eye.movement_smoothing
+            ),
         )
 
     async def horiz_look(self, offset: float):
         await asyncio.gather(
+            move(
+                self.lower_lids,
+                self.config.lower_lids.open_y - self.lid_offset(),
+                smoothing_factor=self.config.lower_lids.movement_smoothing
+            ),
+            move(
+                self.upper_lids,
+                self.config.upper_lids.open_y + self.lid_offset(),
+                smoothing_factor=self.config.upper_lids.movement_smoothing
+            ),
             move(
                 self.left_x,
                 self.left_x.angle + offset,
