@@ -27,6 +27,7 @@ class FakeSpeaker(Speaker):
     async def say(self, message: str):
         logger.info(message)
 
+
 class GoogleSpeaker(Speaker):
     async def say(self, message: str):
         logger.info("say.start", message=message)
@@ -38,6 +39,7 @@ class GoogleSpeaker(Speaker):
 
         play(AudioSegment.from_mp3(mp3_fp))
         logger.info("say.done", message=message)
+
 
 class Ttsx3Speaker(Speaker):
     def __init__(self, config: Config):

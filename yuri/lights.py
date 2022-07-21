@@ -5,11 +5,13 @@ from loguru import logger
 
 from yuri.config import Config
 
+
 class Lights:
     def __init__(self, config: Config):
         self.config = config
-        self.dots = adafruit_dotstar.DotStar(config.pins.dotstar_clock, config.pins.dotstar_data, 3, brightness=0.2)
-
+        self.dots = adafruit_dotstar.DotStar(
+            config.pins.dotstar_clock, config.pins.dotstar_data, 3, brightness=0.2
+        )
 
     @staticmethod
     def wheel(pos):
@@ -28,8 +30,8 @@ class Lights:
     def off(self):
         for i in range(3):
             self.dots[i] = 0
-    
-    def cycle_colors(self, seconds: int): 
+
+    def cycle_colors(self, seconds: int):
         stop_at = datetime.utcnow() + timedelta(seconds=seconds)
         logger.info("cycle_colors.start")
 
@@ -41,6 +43,5 @@ class Lights:
                 self.dots.show()
                 time.sleep(0.01)
 
-        
         self.off()
         logger.info("cycle_colors.done")

@@ -9,6 +9,7 @@ from loguru import logger
 
 Pin = board.pin.Pin
 
+
 class PinsConfig(BaseModel):
     dotstar_clock: Pin = board.D6
     dotstar_data: Pin = board.D5
@@ -18,7 +19,7 @@ class PinsConfig(BaseModel):
     joyup: Pin = board.D23
     joyright: Pin = board.D24
     joyselect: Pin = board.D16
-    
+
     class Config:
         arbitrary_types_allowed = True
 
@@ -28,11 +29,13 @@ class EyeConfig(BaseModel):
     neutral_y: Optional[float] = None
     movement_smoothing: float = 0.80
 
+
 class LidsConfig(BaseModel):
     closed_y: float
     open_y: float
     wide_open_y: float
     movement_smoothing: float = 0.80
+
 
 class EyesConfig(BaseModel):
     left_eye: EyeConfig = EyeConfig()
@@ -47,7 +50,7 @@ class EyesConfig(BaseModel):
         open_y=13.0,
         wide_open_y=15.0,
     )
-    
+
 
 class Config(BaseModel):
     listener_type: str = "sphinx"
@@ -60,7 +63,6 @@ class Config(BaseModel):
             config_file.write(json.dumps(self.dict(exclude={"pins"}), indent=2))
 
 
-
 class ConfigFactory:
     @classmethod
     def create(cls, location: str) -> Config:
@@ -71,7 +73,6 @@ class ConfigFactory:
             except json.JSONDecodeError:
                 logger.warning("error parsing config")
 
-            config = Config.parse_obj(obj) 
-
+            config = Config.parse_obj(obj)
 
         return config

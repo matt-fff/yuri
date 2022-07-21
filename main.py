@@ -12,6 +12,7 @@ from yuri.speaker import SpeakerFactory
 from yuri.lights import Lights
 from yuri.input import Input
 from yuri.servos import Servos
+
 # from yuri.textgen import TextGen
 
 app = typer.Typer()
@@ -22,6 +23,7 @@ DEFAULT_CONFIG_LOCATION = "yuri.json"
 def get_config(config_path: Optional[str]) -> Config:
     config_path = config_path or DEFAULT_CONFIG_LOCATION
     return ConfigFactory.create(config_path)
+
 
 @app.command()
 def respond(prompt: str, config_path: Optional[str] = None):
@@ -38,17 +40,18 @@ def servos(config_path: Optional[str] = None):
     servos.rotate()
 
 
-
 @app.command()
 def converse(max_seconds: Optional[int] = None, config_path: Optional[str] = None):
     config = get_config(config_path)
     logger.error("converse is not yet implemented")
+
 
 @app.command()
 def inputs(seconds: int = 10, config_path: Optional[str] = None):
     config = get_config(config_path)
     inputs = Input(config)
     inputs.demo(seconds)
+
 
 @app.command()
 def colors(seconds: int = 3, config_path: Optional[str] = None):
@@ -62,11 +65,12 @@ async def asay(message: str, config: Config):
     speaker = SpeakerFactory.create(config)
     await asyncio.gather(servos.eyes.loop(), speaker.say(message))
 
+
 @app.command()
 def say(message: str, config_path: Optional[str] = None):
     config = get_config(config_path)
     asyncio.run(asay(message, config))
-    
+
 
 @app.command()
 def transcribe(config_path: Optional[str] = None):
@@ -76,6 +80,7 @@ def transcribe(config_path: Optional[str] = None):
     transcription = listener.transcribe(audio)
     logger.info(transcription)
 
+
 @app.command()
 def calibrate(config_path: Optional[str] = None):
     config = get_config(config_path)
@@ -83,10 +88,9 @@ def calibrate(config_path: Optional[str] = None):
     speaker = SpeakerFactory.create(config)
     inputs = Input(config)
 
-    asyncio.run(
-        servos.eyes.calibrate(inputs, speaker=speaker)
-    )
+    asyncio.run(servos.eyes.calibrate(inputs, speaker=speaker))
     config.save(config_path or DEFAULT_CONFIG_LOCATION)
+
 
 @app.command()
 def repeat(config_path: Optional[str] = None):

@@ -33,7 +33,7 @@ class SpeechRecognitionListener(Listener):
         super().__init__(config)
         self.mic = sr.Microphone()
         self.recognizer = sr.Recognizer()
-        
+
     @property
     def recognize(self) -> Callable[[sr.AudioData], str]:
         listener_type = self.config.listener_type
@@ -42,7 +42,6 @@ class SpeechRecognitionListener(Listener):
             raise ValueError(f"{listener_type} is not a valid listener type")
 
         return getattr(self.recognizer, transcribe_name)
-
 
     def listen(self) -> sr.AudioData:
         logger.info("listen.start")
