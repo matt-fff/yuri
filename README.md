@@ -1,5 +1,44 @@
 # Yuri: technically an assistant
 
+## New notes:
+
+```
+echo 'export LANG="en_US.UTF-8"' >> ~/.profile
+
+# For PyEnv - https://github.com/pyenv/pyenv/wiki#suggested-build-environment=
+sudo apt-get update; sudo apt-get install make build-essential libssl-dev zlib1g-dev \
+	libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
+	libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+
+# For other stuff
+sudo apt install \
+	git
+
+curl https://pyenv.run | bash
+```
+
+Add the following to your bashrc:
+```
+export PYENV_ROOT="$HOME/.pyenv"
+command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+```
+
+Now install python (Yuri only works with 3.7.*)
+```
+source ~/.bashrc
+pyenv install 3.7.13
+```
+
+```
+git clone https://github.com/matt-fff/yuri.git
+pyenv virtualenv 3.7.13 yuri
+cd yuri
+pyenv shell yuri
+```
+
+
+
 ## Setup notes:
 
 
@@ -12,12 +51,14 @@ sudo apt install swig libpulse-dev libasound2-dev git uidmap pipenv \
 	libffi-dev liblzma-dev python3-pyaudio portaudio19-dev \
 	espeak ffmpeg libespeak1
 
+
+
 git clone https://github.com/pyenv/pyenv.git ~/.pyenv
 cd ~/.pyenv && src/configure && make -C src
 sudo curl -sSL https://get.docker.com/ | sh
 ```
 
-You have to haver docker setup in rootless mode: https://docs.docker.com/engine/security/rootless/
+You have to have docker setup in rootless mode: https://docs.docker.com/engine/security/rootless/
 ```
 sudo systemctl disable --now docker.service docker.socket
 dockerd-rootless-setuptool.sh install
