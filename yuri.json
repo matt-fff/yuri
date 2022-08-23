@@ -1,6 +1,12 @@
 {
-  "listener_type": "sphinx",
-  "speaker_type": "pyttsx3",
+  "speaker": {
+    "speaker_type": "google",
+    "device_index": 2
+  },
+  "listener": {
+    "listener_type": "sphinx",
+    "device_index": 3
+  },
   "eyes": {
     "left_eye": {
       "neutral_x": 137.23261488409923,

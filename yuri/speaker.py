@@ -1,5 +1,6 @@
 from abc import abstractmethod, ABCMeta
 from io import BytesIO
+from typing import Optional
 
 import pyttsx3
 
@@ -12,7 +13,7 @@ from yuri.config import Config
 
 
 class Speaker(metaclass=ABCMeta):
-    def __init__(self, config: Config):
+    def __init__(self, config: Optional[Config]):
         self.config = config
 
     @abstractmethod
@@ -22,7 +23,7 @@ class Speaker(metaclass=ABCMeta):
 
 class FakeSpeaker(Speaker):
     def __init__(self, *args):
-        super().__init__(None)
+        super().__init__(None if not args else args[0])
 
     async def say(self, message: str):
         logger.info(message)
@@ -69,7 +70,7 @@ class SpeakerFactory:
 
     @classmethod
     def create(cls, config: Config) -> Speaker:
-        speaker_type = config.speaker_type
+        speaker_type = config.speaker.speaker_type
         if speaker_type not in cls.SPEAKERS:
             raise ValueError(f"{speaker_type} is invalid")
 

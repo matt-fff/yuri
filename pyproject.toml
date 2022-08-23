@@ -1,14 +1,40 @@
 [build-system]
-requires = ["flit_core >=2,<4"]
+requires = ["flit_core >=3.2,<4"]
 build-backend = "flit_core.buildapi"
 
-[tool.flit.metadata]
-module = "yuri"
-author = "Matt White"
-author-email = "mail@matt-w.net"
-home-page = "https://matt-w.net"
+[project]
+name = "yuri"
+authors = [{name = "Matt White", email = "mail@matt-w.net"}]
+readme = "README.md"
+license = {file = "LICENSE"}
 classifiers = ["License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)"]
-description-file = "README.md"
+dynamic = ["version", "description"]
+dependencies = [
+    "typer",
+    "loguru",
+    "gTTS",
+    "pydub",
+    "adafruit-circuitpython-dotstar",
+    "adafruit-circuitpython-motor",
+    "adafruit-circuitpython-bmp280",
+    "adafruit-circuitpython-pca9685",
+    "rpi.gpio",
+    "pyttsx3",
+    "pydantic",
+    "pyaudio",
+    "pocketsphinx",
+    "SpeechRecognition",
+]
+
+[project.optional-dependencies]
+quality = [
+    "black",
+    "flake8",
+    "pylint"
+]
+test = [
+    "pytest"
+]
 
 [project.urls]
 Home = "https://github.com/matt-fff/yuri"
@@ -25,5 +51,4 @@ missing-docstring,bad-continuation,fixme
 
 [tool.pylint.reports]
 output-format = "colorized"
-
 
