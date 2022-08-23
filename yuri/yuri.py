@@ -6,12 +6,12 @@ from yuri.listener import ListenerFactory
 from yuri.speaker import SpeakerFactory
 from yuri.lights import Lights
 from yuri.input import Input
-from yuri.servos import Servos
+from yuri.servos import ServosFactory
 
 
 class Yuri:
     def __init__(self, config: Config):
-        self.servos = Servos(config)
+        self.servos = ServosFactory.create(config)
         self.inputs = Input(config)
         self.lights = Lights(config)
         self.speaker = SpeakerFactory.create(config)

@@ -49,10 +49,18 @@ class EyesConfig(BaseModel):
         wide_open_y=15.0,
     )
 
+class SpeakerConfig(BaseModel):
+    speaker_type: str = "google"
+    device_index: Optional[int] = None
+
+class ListenerConfig(BaseModel):
+    listener_type: str = "sphinx"
+    device_index: Optional[int] = None
+    
 
 class Config(BaseModel):
-    listener_type: str = "sphinx"
-    speaker_type: str = "google"
+    speaker: SpeakerConfig = SpeakerConfig()
+    listener: ListenerConfig = ListenerConfig()
     pins: PinsConfig = PinsConfig()
     eyes: EyesConfig = EyesConfig()
 

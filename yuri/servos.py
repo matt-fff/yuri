@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from abc import abstractmethod, ABCMeta
 import board
 import busio
 import asyncio
@@ -305,14 +306,50 @@ class Eyes:
         )
 
 
-class Servos:
+class Servos(metaclass=ABCMeta):
     def __init__(self, config: Config):
+        self.config = config
+
+    @abstractmethod
+    async def loop(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def calibrate(
+        self,
+        inputs: Input,
+        speaker: Speaker = FakeSpeaker(),
+        helpers: bool = True,
+    ):
+        raise NotImplementedError()
+
+
+
+class FakeServos(Servos):
+    def __init__(self, config: Config):
+        super().__init__(config)
+
+    async def loop(self):
+        pass
+    
+    async def calibrate(
+        self,
+        inputs: Input,
+        speaker: Speaker = FakeSpeaker(),
+        helpers: bool = True,
+    ):
+        pass
+
+class PCA9685Servos(Servos):
+    def __init__(self, config: Config):
+        super().__init__(config)
+
         i2c = busio.I2C(board.SCL, board.SDA)
         pca = PCA9685(i2c)
         pca.frequency = 100
 
         self.eyes = Eyes(
-            config=config.eyes,
+            config=self.config.eyes,
             lower_lids=Servo(pca.channels[0]),
             right_y=Servo(pca.channels[1]),
             right_x=Servo(pca.channels[2]),
@@ -325,6 +362,14 @@ class Servos:
     async def loop(self):
         await self.eyes.loop()
 
+    async def calibrate(
+        self,
+        inputs: Input,
+        speaker: Speaker = FakeSpeaker(),
+        helpers: bool = True,
+    ):
+        await self.eyes.calibrate(inputs, speaker, helpers)
+
     def rotate(self):
         logger.info("triggering servos")
         breakpoint()
@@ -334,3 +379,19 @@ class Servos:
         #     servo.angle = 0
         #     time.sleep(1)
         logger.info("done")
+
+
+
+
+class ServosFactory:
+    @classmethod
+    def create(cls, config: Config) -> Servos:
+        try:
+            return PCA9685Servos(config)
+        except ValueError:
+            logger.warning("Failed to initialize servos.")
+            return FakeServos(config)
+
+
+
+

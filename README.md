@@ -39,12 +39,16 @@ pyenv shell yuri
 
 
 
+## HAT Setup
+Yuri currently uses an [Adafruit BrainCraft HAT](https://www.adafruit.com/product/4374)
+Follow their setup first: https://learn.adafruit.com/adafruit-braincraft-hat-easy-machine-learning-for-raspberry-pi
+
 ## Setup notes:
 
 
 Dependencies
 ```
-sudo apt install swig libpulse-dev libasound2-dev git uidmap pipenv \
+sudo apt install swig libpulse-dev libasound2-dev git uidmap \
 	make build-essential libssl-dev zlib1g-dev \
 	libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
 	libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev \
@@ -80,6 +84,16 @@ sudo python3 adafruit-pitft.py --display=st7789_240x240 --rotation=90 --install-
 There was no exact match for the hat I'm using. But the display is the same resolution and whatnot.
 
 _NOTE the display setup takes FOREVER and there's no progress bar/output to speak of_
+
+### Audio
+```
+cd ~
+sudo apt-get install -y git
+git clone https://github.com/HinTak/seeed-voicecard
+cd seeed-voicecard
+git checkout v5.9
+sudo ./install.sh
+```
 
 ### Tensorflow - install hell
 Good guide: https://www.bitsy.ai/3-ways-to-install-tensorflow-on-raspberry-pi/
