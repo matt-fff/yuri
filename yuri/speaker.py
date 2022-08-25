@@ -3,18 +3,68 @@ from io import BytesIO
 from typing import Optional
 
 import pyttsx3
+import pyaudio
 
 from gtts import gTTS
 from loguru import logger
 from pydub import AudioSegment
-from pydub.playback import play
+from pydub.utils import make_chunks
 
-from yuri.config import Config
+from yuri.config import SpeakerConfig, Config
 
 
 class Speaker(metaclass=ABCMeta):
-    def __init__(self, config: Optional[Config]):
+    SAMPLE_RATES = [32000, 44100, 48000, 96000, 128000]
+
+    def __init__(self, config: SpeakerConfig):
         self.config = config
+
+    def open_stream(self, segment: AudioSegment) -> pyaudio.Stream:
+        pa = pyaudio.PyAudio()
+        
+        format_ = pyaudio.paInt16
+        if segment.sample_width:
+            format_ = pa.get_format_from_width(segment.sample_width)
+
+        for rate in self.SAMPLE_RATES:
+            for channels in range(segment.channels or 2, 0, -1):
+                try:
+                    if not pa.is_format_supported(rate,
+                             output_device=self.config.device_index,
+                             output_channels=channels,
+                             output_format=format_
+                    ):
+                        continue
+
+                    # TODO let's get a context manager going
+                    return pa.open(format=format_,
+                        channels=channels,
+                        rate=rate,
+                        input=False,
+                        output=True,
+                        output_device_index=self.config.device_index
+                    )
+                except ValueError:
+                    pass
+
+        raise ValueError("No valid sample rate detected for output device")
+
+    def play(self, segment: AudioSegment):
+        pa = pyaudio.PyAudio()
+        stream = self.open_stream(segment)
+
+        # Just in case there were any exceptions/interrupts, we release the resource
+        # So as not to raise OSError: Device Unavailable should play() be used again
+        try:
+            # break audio into half-second chunks (to allows keyboard interrupts)
+            for chunk in make_chunks(segment, 500):
+                stream.write(chunk._data)
+        finally:
+            stream.stop_stream()
+            stream.close()
+
+            pa.terminate()
+
 
     @abstractmethod
     async def say(self, message: str):
@@ -38,12 +88,13 @@ class GoogleSpeaker(Speaker):
         tts.write_to_fp(mp3_fp)
         mp3_fp.seek(0)
 
-        play(AudioSegment.from_mp3(mp3_fp))
+        self.play(AudioSegment.from_mp3(mp3_fp))
+
         logger.info("say.done", message=message)
 
 
 class Ttsx3Speaker(Speaker):
-    def __init__(self, config: Config):
+    def __init__(self, config: SpeakerConfig):
         self.config = config
         self.engine = pyttsx3.init()
         # voices 2, 13, 14, 17
@@ -74,4 +125,4 @@ class SpeakerFactory:
         if speaker_type not in cls.SPEAKERS:
             raise ValueError(f"{speaker_type} is invalid")
 
-        return cls.SPEAKERS[speaker_type](config)
+        return cls.SPEAKERS[speaker_type](config.speaker)

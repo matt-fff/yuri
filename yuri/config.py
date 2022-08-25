@@ -2,11 +2,13 @@ from pydantic import BaseModel
 
 import board
 import json
-from typing import Optional
+from typing import Optional, List
+
+import pyaudio
 from loguru import logger
 
-Pin = board.pin.Pin
 
+Pin = board.pin.Pin
 
 class PinsConfig(BaseModel):
     dotstar_clock: Pin = board.D6
@@ -52,6 +54,7 @@ class EyesConfig(BaseModel):
 class SpeakerConfig(BaseModel):
     speaker_type: str = "google"
     device_index: Optional[int] = None
+
 
 class ListenerConfig(BaseModel):
     listener_type: str = "sphinx"
