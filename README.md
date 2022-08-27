@@ -95,6 +95,33 @@ git checkout v5.9
 sudo ./install.sh
 ```
 
+^ This doesn't help your audio if you have a non-standard output.
+
+List the available output cards:
+```
+cat /proc/asound/modules
+```
+
+
+Modify your Alsa configuration to match
+e.g. I had a USB speaker as card #2
+
+`~/.asoundrc`:
+```
+pcm.!default {
+        type plug
+        slave {
+                pcm "hw:2,0"
+        }
+}
+
+ctl.!default {
+        type hw
+        card 2
+}
+```
+
+
 ### Tensorflow - install hell
 Good guide: https://www.bitsy.ai/3-ways-to-install-tensorflow-on-raspberry-pi/
 

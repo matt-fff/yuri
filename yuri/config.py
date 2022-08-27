@@ -52,13 +52,11 @@ class EyesConfig(BaseModel):
     )
 
 class SpeakerConfig(BaseModel):
-    speaker_type: str = "google"
-    device_index: Optional[int] = None
+    engine: str = "google"
 
 
 class ListenerConfig(BaseModel):
-    listener_type: str = "sphinx"
-    device_index: Optional[int] = None
+    engine: str = "sphinx"
     
 
 class Config(BaseModel):

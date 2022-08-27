@@ -14,7 +14,7 @@ from yuri.config import SpeakerConfig, Config
 
 
 class Speaker(metaclass=ABCMeta):
-    SAMPLE_RATES = [32000, 44100, 48000, 96000, 128000]
+    SAMPLE_RATES = sorted([32000, 44100, 48000, 96000, 128000], reverse=True)
 
     def __init__(self, config: SpeakerConfig):
         self.config = config
@@ -26,11 +26,11 @@ class Speaker(metaclass=ABCMeta):
         if segment.sample_width:
             format_ = pa.get_format_from_width(segment.sample_width)
 
-        for rate in self.SAMPLE_RATES:
+        for rate in [segment.frame_rate] + self.SAMPLE_RATES:
             for channels in range(segment.channels or 2, 0, -1):
                 try:
-                    if not pa.is_format_supported(rate,
-                             output_device=self.config.device_index,
+                    breakpoint()
+                    if not rate or pa.is_format_supported(rate,
                              output_channels=channels,
                              output_format=format_
                     ):
@@ -42,7 +42,6 @@ class Speaker(metaclass=ABCMeta):
                         rate=rate,
                         input=False,
                         output=True,
-                        output_device_index=self.config.device_index
                     )
                 except ValueError:
                     pass
@@ -115,13 +114,13 @@ class Ttsx3Speaker(Speaker):
 class SpeakerFactory:
     SPEAKERS = {
         "google": GoogleSpeaker,
-        "pyttsx3": Ttsx3Speaker,
+        "ttsx3": Ttsx3Speaker,
         "fake": FakeSpeaker,
     }
 
     @classmethod
     def create(cls, config: Config) -> Speaker:
-        speaker_type = config.speaker.speaker_type
+        speaker_type = config.speaker.engine
         if speaker_type not in cls.SPEAKERS:
             raise ValueError(f"{speaker_type} is invalid")
 

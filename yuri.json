@@ -1,11 +1,9 @@
 {
   "speaker": {
-    "speaker_type": "google",
-    "device_index": 2
+    "engine": "ttsx3"
   },
   "listener": {
-    "listener_type": "sphinx",
-    "device_index": 3
+    "engine": "sphinx"
   },
   "eyes": {
     "left_eye": {
