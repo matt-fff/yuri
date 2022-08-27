@@ -7,25 +7,25 @@
   },
   "eyes": {
     "left_eye": {
-      "neutral_x": 137.23261488409923,
-      "neutral_y": 122.59251728344856,
+      "neutral_x": 136.93981293208623,
+      "neutral_y": 122.00691337942253,
       "movement_smoothing": 0.8
     },
     "right_eye": {
-      "neutral_x": 8.399755998373323,
-      "neutral_y": 27.13908092720618,
+      "neutral_x": 8.98535990239935,
+      "neutral_y": 34.75193167954453,
       "movement_smoothing": 0.8
     },
     "upper_lids": {
-      "closed_y": 58.76169174461163,
-      "open_y": 83.06425376169175,
-      "wide_open_y": 127.27734851565678,
+      "closed_y": 50.85603904026027,
+      "open_y": 79.84343228954859,
+      "wide_open_y": 98.87555917039448,
       "movement_smoothing": 0.8
     },
     "lower_lids": {
-      "closed_y": 133.42618950793005,
-      "open_y": 155.09353395689303,
-      "wide_open_y": 179.98169987799918,
+      "closed_y": 124.93493289955268,
+      "open_y": 159.77836518910127,
+      "wide_open_y": 169.7336315575437,
       "movement_smoothing": 0.8
     }
   }

@@ -20,7 +20,7 @@ class Yuri:
     async def run(self):
         await asyncio.gather(
             self.servos.loop(),
-            self.lights.cycle_colors(),
+            # self.lights.cycle_colors(),
             self.speech_loop(),
         )
 

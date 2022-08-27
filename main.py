@@ -50,67 +50,6 @@ def converse(
     logger.error("converse is not yet implemented")
 
 @app.command()
-def set_audio_in(config_path: Optional[str] = None):
-    config = get_config(config_path)
-
-    audio = pyaudio.PyAudio()
-    info = audio.get_host_api_info_by_index(0)
-
-    def print_device_options():
-        for i in range(int(info.get('deviceCount', 0))):
-            if int(audio.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels', 0)) > 0:
-                console.print("Input device id ", i, " - ", audio.get_device_info_by_host_api_device_index(0, i).get('name'))
-
-        console.print("Select the desired input device ID") 
-
-    print_device_options()
-    
-    device_id = None
-    while True:
-        try:
-            device_id = int(user_input())
-            break
-        except Exception as exc:
-            console.print(repr(exc))
-            console.print("Yikes. Wanna try again?\n")
-            print_device_options()
-    
-    console.print(f"Saving input device {device_id} to configuration...")
-    config.listener.device_index = device_id
-    config.save(config_path or DEFAULT_CONFIG_LOCATION)
-
-@app.command()
-def set_audio_out(config_path: Optional[str] = None):
-    config = get_config(config_path)
-
-    audio = pyaudio.PyAudio()
-    info = audio.get_host_api_info_by_index(0)
-
-    def print_device_options():
-        for i in range(int(info.get('deviceCount', 0))):
-            if int(audio.get_device_info_by_host_api_device_index(0, i).get('maxOutputChannels', 0)) > 0:
-                console.print("Output device id ", i, " - ", audio.get_device_info_by_host_api_device_index(0, i).get('name'))
-
-        console.print("Select the desired output device ID") 
-
-    print_device_options()
-    
-    device_id = None
-    while True:
-        try:
-            device_id = int(user_input())
-            break
-        except Exception as exc:
-            console.print(repr(exc))
-            console.print("Yikes. Wanna try again?\n")
-            print_device_options()
-    
-    console.print(f"Saving output device {device_id} to configuration...")
-    config.speaker.device_index = device_id
-    config.save(config_path or DEFAULT_CONFIG_LOCATION)
-
-
-@app.command()
 def inputs(seconds: int = 10, config_path: Optional[str] = None):
     config = get_config(config_path)
     inputs = Input(config)
@@ -138,6 +77,13 @@ def transcribe(config_path: Optional[str] = None):
     audio = listener.listen()
     transcription = listener.transcribe(audio)
     logger.info(transcription)
+
+
+@app.command()
+def servos(config_path: Optional[str] = None):
+    config = get_config(config_path)
+    servos = ServosFactory.create(config)
+    asyncio.run(servos.loop())
 
 
 @app.command()

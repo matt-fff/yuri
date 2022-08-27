@@ -29,7 +29,6 @@ class Speaker(metaclass=ABCMeta):
         for rate in [segment.frame_rate] + self.SAMPLE_RATES:
             for channels in range(segment.channels or 2, 0, -1):
                 try:
-                    breakpoint()
                     if not rate or pa.is_format_supported(rate,
                              output_channels=channels,
                              output_format=format_
